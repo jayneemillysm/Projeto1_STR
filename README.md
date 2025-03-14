@@ -9,7 +9,7 @@ Este repositório é referente ao Projeto 01 da disciplina Sistemas em Tempo Rea
 ## Equipe
 
 - Jayne Emilly Silva de Melo (121210548)
-- Victor Hugo Melquíades Klein ()
+- Victor Hugo Melquíades Klein (119110066)
 
 ---
 
