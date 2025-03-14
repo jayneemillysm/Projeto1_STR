@@ -1,38 +1,49 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <semaphore.h>
 
-#define NUM_ANDARES 5
-#define TEMPO_MOVIMENTO 1
-#define TEMPO_EMBARQUE 2
+#define NUM_ANDARES 5          // Número total de andares
+#define TEMPO_MOVIMENTO 1      // Tempo que o elevador leva para se mover um andar (segundos)
+#define TEMPO_EMBARQUE 2       // Tempo para o embarque e desembarque de usuários (segundos)
 
-// Estrutura para armazenar chamadas dos usuários
+// Estrutura para armazenar chamadas de usuários
 typedef struct {
-    int id_usuario;
-    int origem;
-    int destino;
+    int id_usuario;  // ID único do usuário
+    int origem;      // Andar de onde o usuário chama o elevador
+    int destino;     // Andar para onde o usuário deseja ir
 } Chamada;
 
-// Fila de chamadas e controle
-//#define MAX_CHAMADAS 100  // Capacidade inicial da fila 
-#define MAX_CHAMADAS 10  // Capacidade inicial da fila 
+// Definição da fila de chamadas como buffer circular
+#define MAX_CHAMADAS 100  // Capacidade da fila de chamadas
 Chamada fila_chamadas[MAX_CHAMADAS];
-int write_index = 0, read_index = 0;
-sem_t sem_fila;   // Controla acesso à fila
-sem_t chamadas_pendentes; // Indica chamadas na fila
-pthread_mutex_t fila_mutex = PTHREAD_MUTEX_INITIALIZER; // Mutex para fila
+int write_index = 0, read_index = 0;  // Índices para leitura e escrita na fila
 
-// Elevador
-int andar_atual = 0;
-int usuario_id_global = 1;  // ID dinâmico para novos usuários
+// Semáforos e mutex para controle de concorrência
+sem_t sem_fila;   // Controla o acesso seguro à fila de chamadas
+sem_t chamadas_pendentes; // Indica se há chamadas na fila
+pthread_mutex_t fila_mutex = PTHREAD_MUTEX_INITIALIZER; // Mutex para garantir exclusão mútua na fila
 
-// Função do usuário (Thread)
+// Estado do elevador
+int andar_atual = 0;  // Posição atual do elevador
+int usuario_id_global = 1;  // ID global para novos usuários
+
+/**
+ * Função: usuario
+ * ----------------
+ * Simula um usuário chamando o elevador. Escolhe aleatoriamente
+ * um andar de origem e um destino diferentes, adicionando a chamada à fila.
+ *
+ * Argumentos:
+ *    - arg: ponteiro para um inteiro representando o ID do usuário.
+ */
 void* usuario(void* arg) {
     int id = *((int*)arg);
     free(arg);
 
+    // Escolhe um andar de origem aleatório
     int origem = rand() % NUM_ANDARES;
     int destino;
     do {
@@ -40,59 +51,53 @@ void* usuario(void* arg) {
     } while (origem == destino); // Garante que origem != destino
 
     // Adiciona a chamada na fila
-    sem_wait(&sem_fila);
-    pthread_mutex_lock(&fila_mutex);
+    sem_wait(&sem_fila); // Aguarda permissão para acessar a fila
+    pthread_mutex_lock(&fila_mutex); // Bloqueia a fila para evitar concorrência
 
+    // Armazena a chamada na fila circular
     fila_chamadas[write_index].id_usuario = id;
     fila_chamadas[write_index].origem = origem;
     fila_chamadas[write_index].destino = destino;
-    write_index = (write_index+1) % MAX_CHAMADAS;
+    write_index = (write_index + 1) % MAX_CHAMADAS; // Incremento circular
 
     printf("[Usuário %d] Chamando o elevador do andar %d para o andar %d.\n", id, origem, destino);
 
-    pthread_mutex_unlock(&fila_mutex);
-    //sem_post(&sem_fila);
-    sem_post(&chamadas_pendentes);
+    pthread_mutex_unlock(&fila_mutex); // Libera a fila
+    sem_post(&chamadas_pendentes); // Sinaliza que há uma nova chamada pendente
 
     return NULL;
 }
 
-// Função do elevador (Thread)
+/**
+ * Função: elevador
+ * -----------------
+ * Simula o funcionamento do elevador. O elevador aguarda chamadas e,
+ * ao receber uma, se move até o andar do usuário, permite o embarque
+ * e depois se move até o destino.
+ *
+ * Argumentos:
+ *    - arg: não utilizado, mas necessário para as funções da biblioteca.
+ */
 void* elevador(void* arg) {
     printf("[Elevador] Inicializado no andar 0. Aguardando chamadas...\n");
 
     while (1) {
-        if (sem_trywait(&chamadas_pendentes)) {
-            printf("[Elevador] Aguardando novas chamadas.\n");
-            sem_wait(&chamadas_pendentes);
-        }
+        sem_wait(&chamadas_pendentes); // Espera até que haja chamadas pendentes
 
-        //sem_wait(&chamadas_pendentes); // Espera até que haja chamadas
-
-        // Pega a primeira chamada da fila
+        // Obtém a primeira chamada da fila circular
         Chamada chamada = fila_chamadas[read_index];
-        read_index = (read_index+1) % MAX_CHAMADAS;
-
-        pthread_mutex_lock(&fila_mutex);
+        read_index = (read_index + 1) % MAX_CHAMADAS;
 
         printf("[Elevador] Atendendo ao usuário %d: %d -> %d\n", chamada.id_usuario, chamada.origem, chamada.destino);
-        /*
-        for (int i = 0; i < write_index - 1; i++) {
-            fila_chamadas[i] = fila_chamadas[i + 1]; // Reorganiza fila
-        }
-        write_index--;
-        */
 
-        pthread_mutex_unlock(&fila_mutex);
-        sem_post(&sem_fila);
-
-        // Movimenta o elevador até a origem do usuário
+        // Movimenta o elevador até o andar de origem do usuário
         while (andar_atual != chamada.origem) {
             andar_atual += (andar_atual < chamada.origem) ? 1 : -1;
             printf("[Elevador] Movendo-se para o andar %d...\n", andar_atual);
             sleep(TEMPO_MOVIMENTO);
         }
 
+        // Aguarda pelo embarque do usuário
         printf("[Elevador] Chegou ao andar %d. Usuário %d embarcou.\n", andar_atual, chamada.id_usuario);
         sleep(TEMPO_EMBARQUE);
 
@@ -103,6 +108,7 @@ void* elevador(void* arg) {
             sleep(TEMPO_MOVIMENTO);
         }
 
+        // Aguarda pelo desembarque do usuário
         printf("[Elevador] Chegou ao andar %d. Usuário %d desembarcou.\n", andar_atual, chamada.id_usuario);
         sleep(TEMPO_EMBARQUE);
     }
@@ -110,25 +116,37 @@ void* elevador(void* arg) {
     return NULL;
 }
 
-// Função para criar novos usuários continuamente
+/**
+ * Função: gerador_usuarios
+ * -------------------------
+ * Cria continuamente novos usuários e os adiciona ao sistema,
+ * simulando chamadas ao elevador em intervalos de tempo aleatórios.
+ *
+ * Argumentos:
+ *    - arg: não utilizado, mas necessário para as funções da biblioteca.
+ */
 void* gerador_usuarios(void* arg) {
     while (1) {
-        int* id = malloc(sizeof(int));
+        int* id = malloc(sizeof(int));  // Aloca memória para o ID do usuário
         *id = usuario_id_global++;
         pthread_t usuario_thread;
         pthread_create(&usuario_thread, NULL, usuario, id);
         pthread_detach(usuario_thread);  // Libera a thread automaticamente após execução
 
-        //sleep(1);
-        //sleep(rand() % 3 + 1);  // Novo usuário surge entre 1 e 3 segundos
-        sleep(rand()%10 + 2*(TEMPO_EMBARQUE + 2*TEMPO_MOVIMENTO) - 5);  // Novo usuário surge em um tempo aproximado de atender outro
+        // Tempo de criação ajustado para simular um fluxo contínuo
+        sleep(rand() % 10 + 2 * (TEMPO_EMBARQUE + 2 * TEMPO_MOVIMENTO) - 5);
     }
-
     return NULL;
 }
 
+/**
+ * Função: main
+ * -------------
+ * Inicializa o sistema do elevador, cria as threads necessárias
+ * e mantém o programa executando indefinidamente.
+ */
 int main() {
-    srand(time(NULL));
+    srand(time(NULL)); // Inicializa o gerador de números aleatórios
 
     // Inicializa os semáforos
     sem_init(&sem_fila, 0, MAX_CHAMADAS);
@@ -142,7 +160,7 @@ int main() {
     pthread_t gerador_thread;
     pthread_create(&gerador_thread, NULL, gerador_usuarios, NULL);
 
-    // Deixar rodando indefinidamente
+    // Mantém o programa executando indefinidamente
     pthread_join(elevador_thread, NULL);
     pthread_join(gerador_thread, NULL);
 
@@ -152,3 +170,4 @@ int main() {
 
     return 0;
 }
+
