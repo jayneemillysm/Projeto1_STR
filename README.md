@@ -15,38 +15,31 @@ Este repositório é referente ao Projeto 01 da disciplina Sistemas em Tempo Rea
 
 ## Descrição
 
-O projeto consiste no desenvolvimento de um simulador de elevador que opera em um ambiente de programação concorrente, usando a linguagem C e semáforos no sistema operacional Linux. O sistema simula um único elevador atendendo múltiplos usuários de forma simultânea em um edifício de cinco andares. O principal objetivo é organizar e gerenciar as chamadas dos usuários para o elevador, assegurando que não ocorram conflitos entre as threads, e que todas as requisições sejam atendidas em ordem.
-
+Este projeto desenvolve um sistema de simulação de um elevador que opera com múltiplas threads em ambiente Linux, utilizando linguagem C e mecanismos de semáforos para gerenciar a concorrência. O foco é criar um sistema que organiza chamadas de um elevador em um prédio de cinco andares, otimizando a movimentação e evitando a colisão de dados entre as threads.
 ---
 
 ## Objetivos
 
-
-1. Implementar threads concorrentes no Linux.
-2. Utilizar semáforos para controle de acesso e sincronização.
-3. Gerenciar uma fila de chamadas de maneira eficiente.
-4. Simular a movimentação do elevador baseada em requisições dos usuários.
-
+1. Implementação de múltiplas threads operando simultaneamente no sistema operacional Linux.
+2. Utilização de semáforos para a sincronização e controle de acesso aos recursos compartilhados.
+3. Otimização de uma fila de chamadas para assegurar a resposta em tempo real às solicitações dos usuários.
+4. Simulação da operacionalidade de um elevador conforme as chamadas registradas.
 ---
 
 ## Funcionalidades
 
 
-1. Gestão de Chamadas: Usuários (threads) podem fazer chamadas para o elevador de andares aleatórios, e estas chamadas são armazenadas em uma fila compartilhada.
-
-2. Controle Concorrente: O acesso à fila de chamadas é protegido por semáforos, garantindo que múltiplos usuários não modifiquem os dados simultaneamente.
-
-3. Atendimento de Chamadas: O elevador, operando como outra thread, verifica a fila e atende às chamadas na ordem de chegada, seguindo a política FIFO (Primeiro a Entrar, Primeiro a Sair).
-
-4. Simulação de Embarque/Desembarque: Quando o elevador chega ao andar solicitado, ele pausa por alguns segundos para simular o embarque e o desembarque dos usuários.
-
-5. Operação Contínua: O sistema foi projetado para continuar executando e atendendo novas chamadas indefinidamente, sempre respondendo às novas solicitações dos usuários que chegam.
-
+1. Administração de Chamadas: O sistema permite que um número indefinido de usuários (threads) faça chamadas ao elevador de andares variados.
+2. Controle de Fila: Utiliza semáforos para garantir que a fila de chamadas seja acessada de maneira segura e ordenada.
+3. Dinâmica do Elevador: A thread do elevador responde às chamadas na ordem em que são recebidas, simulando a espera por embarque e desembarque de passageiros.
 ---
 
 ## Modelagem
 
 O sistema é desenvolvido para operar no sistema operacional Linux, utilizando a linguagem C para implementação.
+O sistema simula um cenário onde múltiplos usuários (representados por threads) podem solicitar o elevador em diferentes andares de um prédio de cinco andares. Essas solicitações são gerenciadas através de uma fila que organiza as chamadas em ordem de chegada (FIFO - First In, First Out). Semáforos são empregados para garantir que não haja conflitos entre as threads ao acessar a fila de chamadas, proporcionando um controle seguro e eficaz sobre as operações do elevador.
+
+## Compilação e Execução
 
 
 ## Vídeo de apresentação
