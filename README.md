@@ -16,6 +16,8 @@ Este repositório é referente ao Projeto 01 da disciplina Sistemas em Tempo Rea
 ## Descrição
 
 Este projeto desenvolve um sistema de simulação de um elevador que opera com múltiplas threads em ambiente Linux, utilizando linguagem C e mecanismos de semáforos para gerenciar a concorrência. O foco é criar um sistema que organiza chamadas de um elevador em um prédio de cinco andares, otimizando a movimentação e evitando a colisão de dados entre as threads.
+
+
 ---
 
 ## Objetivos
