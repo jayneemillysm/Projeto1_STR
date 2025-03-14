@@ -42,7 +42,7 @@ Este projeto desenvolve um sistema de simulação de um elevador que opera com m
 #### O sistema simula um cenário onde múltiplos usuários (representados por threads) podem solicitar o elevador em diferentes andares de um prédio de cinco andares. Essas solicitações são gerenciadas através de uma fila que organiza as chamadas em ordem de chegada (FIFO - First In, First Out). Semáforos são empregados para garantir que não haja conflitos entre as threads ao acessar a fila de chamadas, proporcionando um controle seguro e eficaz sobre as operações do elevador.
 ---
 
-# Execução
+## Execução
 
 Para compilar o programa, utilizando o Makefile, execute o seguinte comando:
 
