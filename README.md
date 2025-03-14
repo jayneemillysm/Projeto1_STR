@@ -43,4 +43,4 @@ O sistema simula um cenário onde múltiplos usuários (representados por thread
 
 
 ## Vídeo de apresentação
-Link de acesso ao vídeo no YouTube:
+Link de acesso ao vídeo no YouTube: https://www.youtube.com/watch?v=AlNSlRAmw44 
